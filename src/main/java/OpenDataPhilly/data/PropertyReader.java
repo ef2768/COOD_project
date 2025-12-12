@@ -39,7 +39,7 @@ public class PropertyReader {
             throw new IOException("CSV file empty.");
 
         }
-
+        //System.out.println("getting headers");
         //splitstring so we get the fields
         String[] fields = header.split(",");
         int zip_index = -1;
@@ -67,31 +67,46 @@ public class PropertyReader {
         String row;
         //now read row by row
         while ((row = b.readLine()) != null) {
+            //System.out.print("reading row---");
+            //System.out.println(row);
             String[] items = row.split(",");
-            if (items.length <= fields.length) {
+            //System.out.print("after split---");
+            /*
+            for (String i : items) {
+                System.out.print("[" + i + "] ");
+            }
+
+             */
+            //System.out.println();
+
+            if (items.length < fields.length) {
+                //System.out.println("EXCLUDED");
                 continue; //this is when the row entry doesnt have enough items
             }
             //zipCode
-            String zipCode = fields[zip_index].trim();
+            String zipCode = items[zip_index].trim();
             if (zipCode.length() > 5) {
                 zipCode = zipCode.substring(0, 5); //only take first five digits
             }
+            //System.out.print("zip ["+ zipCode + "] ");
             //market value
-            String marketValueRaw = fields[val_index].trim();
-            int marketValue = strToInt(marketValueRaw); //use helper function to handle invalid numeric fields
+            String marketValueRaw = items[val_index].trim();
+            double marketValue = strToDouble(marketValueRaw); //use helper function to handle invalid numeric fields
             // "your program should ignore market values and total livable areas that are missing, non-numeric, negative, or zero, but should include “good” data even when the rest of the data for that property is bad."
             // --> in the data tier, we just have to make sure we are not counting that row out
             // Simply register the invalid entry as 0. processor tier will deal with the rest
-
+            //System.out.print("market val ["+ marketValueRaw + " vs " + marketValue + "] ");
             //Liveable area
-            String totLivableAreaRaw = fields[area_index].trim();
-            int totLivableArea = strToInt(totLivableAreaRaw);
-
-            //if all the items turn out to be non-trivial values, we add them as a valid property
+            String totLivableAreaRaw = items[area_index].trim();
+            double totLivableArea = strToDouble(totLivableAreaRaw);
+            //System.out.print("livable area ["+ totLivableAreaRaw + " vs " + totLivableArea + "] ");            //if all the items turn out to be non-trivial values, we add them as a valid property
             if (!zipCode.isEmpty()) {
                 properties.add(new Property(zipCode, marketValue, totLivableArea));
             }
+            //if all the items turn out to be non-trivial values, we add them as a valid property
         }
+        //System.out.println("columns we care about: " + area_index + " " + val_index + " " + zip_index);
+
 
         b.close();
         return properties;
@@ -99,15 +114,15 @@ public class PropertyReader {
     }
 
     //helper method turning the raw strings into ints
-    private int strToInt(String str) {
+    private Double strToDouble(String str) {
         if (str == null || str.trim().isEmpty()) {
-            return 0;
+            return 0.0;
         }
         try {
-            int num = Integer.parseInt(str.trim());
-            return Math.max(num, 0); //if the parsed int is positive
+            double num = Double.parseDouble(str.trim());
+            return Math.max(num, 0); //if the parsed double is positive
         } catch (NumberFormatException e) {
-            return 0; // Non-numeric values are treated as 0!!! E.g. total livable area = "dog"
+            return 0.; // Non-numeric values are treated as 0!!! E.g. total livable area = "dog"
         }
     }
 }

@@ -66,7 +66,7 @@ public class StatisticsProcessor {
         return result;
     }
 
-    public int getAverageMarketValue(String zip) {
+    public double getAverageMarketValue(String zip) {
         zip = normalizeZip(zip);
 
         if (avgMarketValueCache.containsKey(zip)) {
@@ -82,7 +82,7 @@ public class StatisticsProcessor {
         long sum = 0;
         int count = 0;
         for (Property p : props) {
-            int mv = p.getMarketValue();
+            double mv = p.getMarketValue();
             if (mv > 0) {
                 sum += mv;
                 count++;
@@ -110,7 +110,7 @@ public class StatisticsProcessor {
         long sum = 0;
         int count = 0;
         for (Property p : props) {
-            int area = p.getTotalLivableArea();
+            double area = p.getTotalLivableArea();
             if (area > 0) {
                 sum += area;
                 count++;
@@ -122,7 +122,7 @@ public class StatisticsProcessor {
         return result;
     }
 
-    public int getResidentialMarketValuePerCapita(String zip) {
+    public double getResidentialMarketValuePerCapita(String zip) {
         zip = normalizeZip(zip);
 
         List<Property> props = propertiesByZip.get(zip);
@@ -134,7 +134,7 @@ public class StatisticsProcessor {
 
         long sumMarket = 0;
         for (Property p : props) {
-            int mv = p.getMarketValue();
+            double mv = p.getMarketValue();
             if (mv > 0) {
                 sumMarket += mv;
             }

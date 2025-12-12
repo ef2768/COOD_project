@@ -94,7 +94,7 @@ public class Main {
                 case 3:
                     System.out.print("Enter ZIP Code: ");
                     String zip3 = scanner.nextLine().trim();
-                    int avgMv = processor.getAverageMarketValue(zip3);
+                    double avgMv = processor.getAverageMarketValue(zip3);
                     System.out.println(avgMv);
                     break;
                 case 4:
@@ -106,7 +106,7 @@ public class Main {
                 case 5:
                     System.out.print("Enter ZIP Code: ");
                     String zip5 = scanner.nextLine().trim();
-                    int mvPerCapita = processor.getResidentialMarketValuePerCapita(zip5);
+                    double mvPerCapita = processor.getResidentialMarketValuePerCapita(zip5);
                     System.out.println(mvPerCapita);
                     break;
                 default:

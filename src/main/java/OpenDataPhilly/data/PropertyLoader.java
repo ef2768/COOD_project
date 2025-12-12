@@ -45,6 +45,7 @@ public class PropertyLoader {
 
                 Property p = new Property(zip, marketValue, area);
                 result.add(p);
+                System.out.println(p);
             }
         }
 
