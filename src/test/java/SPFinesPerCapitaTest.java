@@ -79,4 +79,12 @@ public class SPFinesPerCapitaTest {
         assertTrue(fines.containsKey(shortZip)); //make sure its loaded
         assertEquals(50.0 / 100, fines.get(shortZip)); //make sure the call works properly
     }
+
+    //additional test for when i input a null field in constructor
+    @Test
+    void testConstructorThrowsOnNullInput() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new StatisticsProcessor(null, List.of(), List.of())
+        );
+    }
 }
