@@ -67,18 +67,20 @@ public class ParkingViolationLoader {
             for (Object obj : array) {
                 JSONObject json = (JSONObject) obj;
 
-                String timestamp = (String) json.get("timestamp");
+                String timestamp = (String) json.get("date");
                 double fine;
                 try {
                     fine = Double.parseDouble(json.get("fine").toString());
                 } catch (NumberFormatException | NullPointerException e) {
                     continue;
                 }
-                String description = (String) json.get("description");
-                String vehicleId = (String) json.get("vehicleID");
+                //The JSON.simple parser returns a Long for numeric values, not a String!!!!!!
+                String description = (String) json.get("violation"); //in JSON its called violation, not description
+                String vehicleId = (String) json.get("plate_id");
                 String state = (String) json.get("state");
-                String violationId = (String) json.get("violationID");
-                String zip = json.get("zipCode") == null ? "" : normalizeZip(json.get("zipCode").toString());
+                //String violationId = (String) json.get("ticket_number");
+                String violationId = json.get("ticket_number") == null ? "" : json.get("ticket_number").toString();
+                String zip = json.get("zip_code") == null ? "" : normalizeZip(json.get("zip_code").toString());
 
                 ParkingViolation v = new ParkingViolation(
                         timestamp, fine, description, vehicleId, state, violationId, zip

@@ -5,7 +5,8 @@ import OpenDataPhilly.common.Population;
 import OpenDataPhilly.common.Property;
 import OpenDataPhilly.data.ParkingViolationLoader;
 import OpenDataPhilly.data.PopulationLoader;
-import OpenDataPhilly.data.PropertyLoader;
+//import OpenDataPhilly.data.PropertyLoader;
+import OpenDataPhilly.data.PropertyReader;
 import OpenDataPhilly.processor.StatisticsProcessor;
 
 import java.io.File;
@@ -41,11 +42,13 @@ public class Main {
 
         try {
             ParkingViolationLoader pvl = new ParkingViolationLoader();
-            PropertyLoader propertyLoader = new PropertyLoader();
+            //PropertyLoader propertyLoader = new PropertyLoader();
+            PropertyReader propertyReader = new PropertyReader();
             PopulationLoader populationLoader = new PopulationLoader();
 
             List<ParkingViolation> violations = pvl.load(format, parkingFile);
-            List<Property> properties = propertyLoader.load(propertiesFile);
+            //List<Property> properties = propertyLoader.load(propertiesFile);
+            List<Property> properties = propertyReader.read(propertiesFile);
             List<Population> populations = populationLoader.load(populationFile);
 
             StatisticsProcessor processor = new StatisticsProcessor(populations, properties, violations);
