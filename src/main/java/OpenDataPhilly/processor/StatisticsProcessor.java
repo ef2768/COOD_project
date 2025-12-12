@@ -12,72 +12,48 @@ public class StatisticsProcessor {
     private final Map<String, List<Property>> propertiesByZip = new HashMap<>();
     private final List<ParkingViolation> violations;
 
-    private final Map<String, Integer> avgMarketValueCache = new HashMap<>();
+    private final Map<String, Integer> avgMVCache = new HashMap<>();
     private final Map<String, Integer> avgAreaCache = new HashMap<>();
 
     public StatisticsProcessor(List<Population> populations,
                                List<Property> properties,
                                List<ParkingViolation> violations) {
+
+        if (populations == null || properties == null || violations == null) {
+            throw new IllegalArgumentException("Null list passed to StatisticsProcessor");
+        }
+
         for (Population p : populations) {
             populationByZip.put(p.getZipCode(), p.getPopulation());
         }
 
         for (Property prop : properties) {
-            propertiesByZip
-                    .computeIfAbsent(prop.getzipCode(), z -> new ArrayList<>())
-                    .add(prop);
+            propertiesByZip.computeIfAbsent(prop.getzipCode(), z -> new ArrayList<>()).add(prop);
         }
 
         this.violations = violations;
     }
 
-    public long getTotalPopulation() {
-        long sum = 0;
-        for (int value : populationByZip.values()) {
-            sum += value;
-        }
-        return sum;
+    public Iterator<Map.Entry<String, Integer>> populationIterator() {
+        return new PopulationIterator();
     }
 
-    public Map<String, Double> getFinesPerCapitaByZip() {
-        Map<String, Double> totalFinesByZip = new HashMap<>();
-
-        for (ParkingViolation v : violations) {
-            String zip = normalizeZip(v.getZipCode());
-            if (zip.isEmpty()) continue;
-            if (!"PA".equals(v.getState())) continue;
-
-            totalFinesByZip.merge(zip, v.getFine(), Double::sum);
-        }
-
-        Map<String, Double> result = new TreeMap<>();
-        for (Map.Entry<String, Double> e : totalFinesByZip.entrySet()) {
-            String zip = e.getKey();
-            double totalFines = e.getValue();
-            Integer pop = populationByZip.get(zip);
-
-            if (pop == null || pop == 0) continue;
-            if (totalFines == 0.0) continue;
-
-            double perCapita = totalFines / pop;
-            result.put(zip, perCapita);
-        }
-
-        return result;
+    private class PopulationIterator implements Iterator<Map.Entry<String, Integer>> {
+        private final Iterator<Map.Entry<String, Integer>> it = populationByZip.entrySet().iterator();
+        @Override public boolean hasNext() { return it.hasNext(); }
+        @Override public Map.Entry<String, Integer> next() { return it.next(); }
     }
 
     public double getAverageMarketValue(String zip) {
         zip = normalizeZip(zip);
 
-        if (avgMarketValueCache.containsKey(zip)) {
-            return avgMarketValueCache.get(zip);
+        if (avgMVCache.containsKey(zip)) {
+            return avgMVCache.get(zip);
         }
-        //1st time someone calls getAverageMarketValue(), it's not in the cache. so we compute the average and store it in avgMarketValueCache. you return the computed value
-        //second time someone calls getAverageMarketValue(), its in the cache --> You just return the stored value. no recomputation needed
 
         List<Property> props = propertiesByZip.get(zip);
-        if (props == null || props.isEmpty()) {
-            avgMarketValueCache.put(zip, 0);
+        if (props == null) {
+            avgMVCache.put(zip, 0);
             return 0;
         }
 
@@ -91,9 +67,9 @@ public class StatisticsProcessor {
             }
         }
 
-        int result = (count == 0) ? 0 : (int) Math.round((double) sum / count);
-        avgMarketValueCache.put(zip, result);
-        return result;
+        int avg = (count == 0) ? 0 : (int) Math.round((double) sum / count);
+        avgMVCache.put(zip, avg);
+        return avg;
     }
 
     public int getAverageTotalLivableArea(String zip) {
@@ -104,7 +80,7 @@ public class StatisticsProcessor {
         }
 
         List<Property> props = propertiesByZip.get(zip);
-        if (props == null || props.isEmpty()) {
+        if (props == null) {
             avgAreaCache.put(zip, 0);
             return 0;
         }
@@ -119,8 +95,40 @@ public class StatisticsProcessor {
             }
         }
 
-        int result = (count == 0) ? 0 : (int) Math.round((double) sum / count);
-        avgAreaCache.put(zip, result);
+        int avg = (count == 0) ? 0 : (int) Math.round((double) sum / count);
+        avgAreaCache.put(zip, avg);
+        return avg;
+    }
+
+    public long getTotalPopulation() {
+        long sum = 0;
+        Iterator<Map.Entry<String, Integer>> it = populationIterator();
+        while (it.hasNext()) {
+            sum += it.next().getValue();
+        }
+        return sum;
+    }
+
+    public Map<String, Double> getFinesPerCapitaByZip() {
+        Map<String, Double> totalFines = new HashMap<>();
+
+        for (ParkingViolation v : violations) {
+            String zip = normalizeZip(v.getZipCode());
+            if (zip.isEmpty()) continue;
+            if (!"PA".equals(v.getState())) continue;
+
+            totalFines.merge(zip, v.getFine(), Double::sum); // lambda feature
+        }
+
+        Map<String, Double> result = new TreeMap<>();
+        for (String zip : totalFines.keySet()) {
+            Integer pop = populationByZip.get(zip);
+            if (pop == null || pop == 0) continue;
+
+            double perCapita = totalFines.get(zip) / pop;
+            if (perCapita > 0) result.put(zip, perCapita);
+        }
+
         return result;
     }
 
@@ -130,27 +138,21 @@ public class StatisticsProcessor {
         List<Property> props = propertiesByZip.get(zip);
         Integer pop = populationByZip.get(zip);
 
-        if (props == null || props.isEmpty() || pop == null || pop == 0) {
-            return 0;
-        }
+        if (props == null || pop == null || pop == 0) return 0;
 
         long sumMarket = 0;
         for (Property p : props) {
-            double mv = p.getMarketValue();
-            if (mv > 0) {
-                sumMarket += mv;
+            if (p.getMarketValue() > 0) {
+                sumMarket += p.getMarketValue();
             }
         }
 
-        if (sumMarket == 0) return 0;
-
-        return (int) Math.round((double) sumMarket / pop);
+        return (sumMarket == 0) ? 0 : (int) Math.round((double) sumMarket / pop);
     }
 
     private String normalizeZip(String raw) {
         if (raw == null) return "";
         raw = raw.trim();
-        if (raw.length() >= 5) return raw.substring(0, 5);
-        return raw; //so this is when its both not null and less than 5
+        return (raw.length() >= 5) ? raw.substring(0, 5) : raw;
     }
 }

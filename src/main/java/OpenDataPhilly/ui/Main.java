@@ -5,7 +5,6 @@ import OpenDataPhilly.common.Population;
 import OpenDataPhilly.common.Property;
 import OpenDataPhilly.data.ParkingViolationLoader;
 import OpenDataPhilly.data.PopulationLoader;
-//import NotUsing.PropertyLoader;
 import OpenDataPhilly.data.PropertyReader;
 import OpenDataPhilly.processor.StatisticsProcessor;
 
@@ -19,9 +18,9 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        if (args.length != 4) {
-            System.out.println("Error: expected 4 runtime arguments:");
-            System.out.println("<csv|json> <parking file> <properties file> <population file>");
+
+        if (args == null || args.length != 4) {
+            System.out.println("Usage: <csv|json> <parking file> <properties file> <population file>");
             return;
         }
 
@@ -36,22 +35,21 @@ public class Main {
         String populationFile = args[3];
 
         if (!canRead(parkingFile) || !canRead(propertiesFile) || !canRead(populationFile)) {
-            System.out.println("Error: one or more input files cannot be opened for reading.");
+            System.out.println("Error: one or more input files cannot be read.");
             return;
         }
 
         try {
             ParkingViolationLoader pvl = new ParkingViolationLoader();
-            //PropertyLoader propertyLoader = new PropertyLoader();
-            PropertyReader propertyReader = new PropertyReader();
             PopulationLoader populationLoader = new PopulationLoader();
+            PropertyReader propertyReader = PropertyReader.getInstance(); // Singleton use
 
             List<ParkingViolation> violations = pvl.load(format, parkingFile);
-            //List<Property> properties = propertyLoader.load(propertiesFile);
             List<Property> properties = propertyReader.read(propertiesFile);
             List<Population> populations = populationLoader.load(populationFile);
 
-            StatisticsProcessor processor = new StatisticsProcessor(populations, properties, violations);
+            StatisticsProcessor processor =
+                    new StatisticsProcessor(populations, properties, violations);
 
             runMenu(processor);
 
@@ -61,6 +59,7 @@ public class Main {
     }
 
     private static boolean canRead(String filename) {
+        if (filename == null || filename.isBlank()) return false;
         File f = new File(filename);
         return f.exists() && f.canRead();
     }
@@ -77,6 +76,7 @@ public class Main {
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
+                System.out.println("Invalid selection. Enter 0–5.");
                 continue;
             }
 
@@ -85,36 +85,26 @@ public class Main {
                     System.out.println("Goodbye!");
                     return;
                 case 1:
-                    long totalPop = processor.getTotalPopulation();
-                    System.out.println(totalPop);
+                    System.out.println(processor.getTotalPopulation());
                     break;
                 case 2:
-                    Map<String, Double> finesPerCapita = processor.getFinesPerCapitaByZip();
-                    for (Map.Entry<String, Double> e : finesPerCapita.entrySet()) {
-                        System.out.printf("%s %.4f%n", e.getKey(), e.getValue());
-                    }
+                    Map<String, Double> fines = processor.getFinesPerCapitaByZip();
+                    fines.forEach((zip, val) -> System.out.printf("%s %.4f%n", zip, val));
                     break;
                 case 3:
                     System.out.print("Enter ZIP Code: ");
-                    String zip3 = scanner.nextLine().trim();
-                    double avgMv = processor.getAverageMarketValue(zip3);
-                    System.out.println(avgMv);
+                    System.out.println(processor.getAverageMarketValue(scanner.nextLine().trim()));
                     break;
                 case 4:
                     System.out.print("Enter ZIP Code: ");
-                    String zip4 = scanner.nextLine().trim();
-                    int avgArea = processor.getAverageTotalLivableArea(zip4);
-                    System.out.println(avgArea);
+                    System.out.println(processor.getAverageTotalLivableArea(scanner.nextLine().trim()));
                     break;
                 case 5:
                     System.out.print("Enter ZIP Code: ");
-                    String zip5 = scanner.nextLine().trim();
-                    double mvPerCapita = processor.getResidentialMarketValuePerCapita(zip5);
-                    System.out.println(mvPerCapita);
+                    System.out.println(processor.getResidentialMarketValuePerCapita(scanner.nextLine().trim()));
                     break;
                 default:
-                    // ignore invalid
-                    break;
+                    System.out.println("Invalid selection.");
             }
         }
     }
