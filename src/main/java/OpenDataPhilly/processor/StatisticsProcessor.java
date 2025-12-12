@@ -72,6 +72,8 @@ public class StatisticsProcessor {
         if (avgMarketValueCache.containsKey(zip)) {
             return avgMarketValueCache.get(zip);
         }
+        //1st time someone calls getAverageMarketValue(), it's not in the cache. so we compute the average and store it in avgMarketValueCache. you return the computed value
+        //second time someone calls getAverageMarketValue(), its in the cache --> You just return the stored value. no recomputation needed
 
         List<Property> props = propertiesByZip.get(zip);
         if (props == null || props.isEmpty()) {
@@ -149,6 +151,6 @@ public class StatisticsProcessor {
         if (raw == null) return "";
         raw = raw.trim();
         if (raw.length() >= 5) return raw.substring(0, 5);
-        return raw;
+        return raw; //so this is when its both not null and less than 5
     }
 }
