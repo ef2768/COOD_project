@@ -1,4 +1,3 @@
-import OpenDataPhilly.data.PropertyLoader;
 import OpenDataPhilly.data.PropertyReader;
 import OpenDataPhilly.common.Property;
 

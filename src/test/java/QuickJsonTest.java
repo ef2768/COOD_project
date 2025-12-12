@@ -1,5 +1,5 @@
 import org.json.simple.JSONObject;
-
+//just seeing if I loaded JSON properly
 public class QuickJsonTest {
     public static void main(String[] args) {
         System.out.println("Testing JSON.simple library...");

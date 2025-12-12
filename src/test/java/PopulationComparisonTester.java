@@ -2,7 +2,7 @@
 
 import OpenDataPhilly.common.Population;
 import OpenDataPhilly.data.PopulationLoader;
-import OpenDataPhilly.data.PopulationReader;
+import NotUsing.PopulationReader;
 
 import java.io.IOException;
 import java.nio.file.Path;

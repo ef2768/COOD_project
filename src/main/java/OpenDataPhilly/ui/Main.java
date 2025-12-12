@@ -5,7 +5,7 @@ import OpenDataPhilly.common.Population;
 import OpenDataPhilly.common.Property;
 import OpenDataPhilly.data.ParkingViolationLoader;
 import OpenDataPhilly.data.PopulationLoader;
-//import OpenDataPhilly.data.PropertyLoader;
+//import NotUsing.PropertyLoader;
 import OpenDataPhilly.data.PropertyReader;
 import OpenDataPhilly.processor.StatisticsProcessor;
 
